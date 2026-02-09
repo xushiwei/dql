@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package maps
+package reflects
 
 import (
 	"iter"
+	"reflect"
 
 	"github.com/goplus/dql/util"
 )
@@ -33,12 +34,32 @@ type Value = util.Value[any]
 // ValueSet represents a set of attribute Values.
 type ValueSet = util.ValueSet[any]
 
+// capitalize capitalizes the first letter of the given name.
+func capitalize(name string) string {
+	if name != "" {
+		if c := name[0]; c >= 'a' && c <= 'z' {
+			return string(c-'a'+'A') + name[1:]
+		}
+	}
+	return name
+}
+
+// uncapitalize uncapitalizes the first letter of the given name.
+func uncapitalize(name string) string {
+	if name != "" {
+		if c := name[0]; c >= 'A' && c <= 'Z' {
+			return string(c-'A'+'a') + name[1:]
+		}
+	}
+	return name
+}
+
 // -----------------------------------------------------------------------------
 
-// Node represents a map[string]any node.
-type Node = map[string]any
+// Node represents a reflect.Value node.
+type Node = reflect.Value
 
-// NodeSet represents a set of map[string]any nodes.
+// NodeSet represents a set of reflect.Value nodes.
 type NodeSet struct {
 	Data iter.Seq2[string, Node]
 	Err  error
@@ -54,20 +75,20 @@ func New(doc Node) NodeSet {
 }
 
 // Source creates a NodeSet from various types of sources:
-// - map[string]any: creates a NodeSet containing the single provided node.
+// - reflect.Value: creates a NodeSet containing the single provided node.
 // - iter.Seq[Node]: directly uses the provided sequence of nodes.
 // - NodeSet: returns the provided NodeSet as is.
-// If the source type is unsupported, it panics.
+// - any other type: uses reflect.ValueOf to create a NodeSet.
 func Source(r any) (ret NodeSet) {
 	switch v := r.(type) {
-	case map[string]any:
+	case reflect.Value:
 		return New(v)
 	case iter.Seq2[string, Node]:
 		return NodeSet{Data: v}
 	case NodeSet:
 		return v
 	default:
-		panic("dql/maps.Source: unsupport source type")
+		return New(reflect.ValueOf(r))
 	}
 }
 
@@ -87,13 +108,87 @@ func (p NodeSet) XGo_Node(name string) NodeSet {
 	return NodeSet{
 		Data: func(yield func(string, Node) bool) {
 			p.Data(func(_ string, node Node) bool {
-				if v, ok := node[name].(map[string]any); ok {
+				if v := lookup(node, name); isNode(v) {
 					return yield(name, v)
 				}
 				return true
 			})
 		},
 	}
+}
+
+func lookup(node Node, name string) (ret Node) {
+	kind := node.Kind()
+	switch kind {
+	case reflect.Pointer, reflect.Interface:
+		node = node.Elem()
+		kind = node.Kind()
+	}
+	switch kind {
+	case reflect.Struct:
+		ret = node.FieldByName(capitalize(name))
+	case reflect.Map:
+		ret = node.MapIndex(reflect.ValueOf(name))
+	}
+	return
+}
+
+func isNode(v reflect.Value) bool {
+	kind := v.Kind()
+	switch kind {
+	case reflect.Invalid:
+		return false
+	case reflect.Pointer, reflect.Interface:
+		v = v.Elem()
+		kind = v.Kind()
+	}
+	return kind == reflect.Struct || kind == reflect.Map
+}
+
+func rangeNode(node Node, yield func(string, Node) bool) bool {
+	kind := node.Kind()
+	switch kind {
+	case reflect.Pointer, reflect.Interface:
+		node = node.Elem()
+		kind = node.Kind()
+	}
+	switch kind {
+	case reflect.Struct:
+		typ := node.Type()
+		for i := 0; i < typ.NumField(); i++ {
+			v := node.Field(i)
+			if isNode(v) {
+				if !yield(uncapitalize(typ.Field(i).Name), v) {
+					return false
+				}
+			}
+		}
+	case reflect.Map:
+		typ := node.Type()
+		if typ.Key().Kind() != reflect.String {
+			return true // only string keys are supported
+		}
+		it := node.MapRange()
+		for it.Next() {
+			v := it.Value()
+			if isNode(v) {
+				if !yield(it.Key().String(), v) {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
+// rangeAnyNodes recursively yields the node and all its descendant nodes.
+func rangeAnyNodes(key string, node Node, yield func(string, Node) bool) bool {
+	if !yield(key, node) {
+		return false
+	}
+	return rangeNode(node, func(k string, n Node) bool {
+		return rangeAnyNodes(k, n, yield)
+	})
 }
 
 // XGo_Child returns a NodeSet containing all child nodes of the nodes in the NodeSet.
@@ -104,14 +199,7 @@ func (p NodeSet) XGo_Child() NodeSet {
 	return NodeSet{
 		Data: func(yield func(string, Node) bool) {
 			p.Data(func(_ string, node Node) bool {
-				for k, v := range node {
-					if child, ok := v.(map[string]any); ok {
-						if !yield(k, child) {
-							return false
-						}
-					}
-				}
-				return true
+				return rangeNode(node, yield)
 			})
 		},
 	}
@@ -132,21 +220,6 @@ func (p NodeSet) XGo_Any() NodeSet {
 	}
 }
 
-// rangeAnyNodes recursively yields the node and all its descendant nodes.
-func rangeAnyNodes(key string, node Node, yield func(string, Node) bool) bool {
-	if !yield(key, node) {
-		return false
-	}
-	for k, v := range node {
-		if child, ok := v.(map[string]any); ok {
-			if !rangeAnyNodes(k, child, yield) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
 // XGo_Attr returns a ValueSet containing the values of the specified attribute
 // for each node in the NodeSet. If a node does not have the specified attribute,
 // the Value will contain ErrNotFound.
@@ -157,10 +230,8 @@ func (p NodeSet) XGo_Attr(name string) ValueSet {
 	return ValueSet{
 		Data: func(yield func(Value) bool) {
 			p.Data(func(_ string, node Node) bool {
-				for k, v := range node {
-					if k == name {
-						return yield(Value{X_0: v})
-					}
+				if v := lookup(node, name); v.IsValid() {
+					return yield(Value{X_0: v.Interface()})
 				}
 				yield(Value{X_1: ErrNotFound})
 				return true
@@ -172,7 +243,8 @@ func (p NodeSet) XGo_Attr(name string) ValueSet {
 // XGo_0 returns the first node in the NodeSet, or ErrNotFound if the set is empty.
 func (p NodeSet) XGo_0() (key string, val Node, err error) {
 	if p.Err != nil {
-		return "", nil, p.Err
+		err = p.Err
+		return
 	}
 	err = ErrNotFound
 	p.Data(func(k string, n Node) bool {
@@ -186,7 +258,8 @@ func (p NodeSet) XGo_0() (key string, val Node, err error) {
 // If there is more than one node in the set, ErrMultiEntities is returned.
 func (p NodeSet) XGo_1() (key string, val Node, err error) {
 	if p.Err != nil {
-		return "", nil, p.Err
+		err = p.Err
+		return
 	}
 	first := true
 	err = ErrNotFound
