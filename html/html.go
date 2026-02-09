@@ -168,6 +168,9 @@ func rangeAnyNodes(n *Node, yield func(*Node) bool) bool {
 // XGo_Attr returns a ValueSet containing the values of the specified attribute
 // for each node in the NodeSet. If a node does not have the specified attribute,
 // the Value will contain ErrNotFound.
+// Special attribute names "_text", "_comment", and "_doctype" can be used to
+// retrieve the text content of text nodes, comment nodes, and doctype nodes
+// respectively (only first matched node returned).
 func (p NodeSet) XGo_Attr(name string) ValueSet {
 	if p.Err != nil {
 		return ValueSet{Err: p.Err}
@@ -175,16 +178,41 @@ func (p NodeSet) XGo_Attr(name string) ValueSet {
 	return ValueSet{
 		Data: func(yield func(Value) bool) {
 			p.Data(func(node *Node) bool {
-				for _, attr := range node.Attr {
-					if attr.Key == name {
-						return yield(Value{X_0: attr.Val})
-					}
-				}
-				yield(Value{X_1: ErrNotFound})
-				return true
+				return nodeAttr(node, name, yield)
 			})
 		},
 	}
+}
+
+// nodeAttr retrieves the value of the specified attribute from the node.
+// It handles special attribute names for text, comment, and doctype nodes.
+// If the attribute is found, it yields the value; otherwise, it yields ErrNotFound.
+// Returns true to continue iteration, false to stop.
+func nodeAttr(node *Node, name string, yield func(Value) bool) bool {
+	var typ html.NodeType
+	switch name {
+	case "_text":
+		typ = html.TextNode
+	case "_comment":
+		typ = html.CommentNode
+	case "_doctype":
+		typ = html.DoctypeNode
+	default:
+		for _, attr := range node.Attr {
+			if attr.Key == name {
+				return yield(Value{X_0: attr.Val})
+			}
+		}
+		goto notFound
+	}
+	for c := node.FirstChild; c != nil; c = c.NextSibling {
+		if c.Type == typ { // only first matched node returned
+			return yield(Value{X_0: c.Data})
+		}
+	}
+notFound:
+	yield(Value{X_1: ErrNotFound})
+	return true
 }
 
 // XGo_0 returns the first node in the NodeSet, or ErrNotFound if the set is empty.

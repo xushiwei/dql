@@ -91,9 +91,6 @@ func From(filename string, src any, conf ...Config) NodeSet {
 // - NodeSet: returns the provided NodeSet as is.
 // If the source type is unsupported, it panics.
 func Source(r any, conf ...Config) (ret NodeSet) {
-	const (
-		defaultMode = parser.ParseComments
-	)
 	switch v := r.(type) {
 	case string:
 		return From(v, nil, conf...)
