@@ -4,5 +4,5 @@ import "github.com/goplus/dql/html"
 doc := html.source(os.Args[1])
 
 for a in doc.**.a if url, err := a.$href; err == nil {
-	echo link
+	echo url
 }
