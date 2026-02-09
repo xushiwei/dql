@@ -22,11 +22,6 @@ import (
 	"github.com/goplus/dql/util"
 )
 
-var (
-	ErrNotFound      = util.ErrNotFound
-	ErrMultiEntities = util.ErrMultiEntities
-)
-
 // Value represents an attribute value or an error.
 type Value = util.Value[any]
 
@@ -162,7 +157,7 @@ func (p NodeSet) XGo_Attr(name string) ValueSet {
 						return yield(Value{X_0: v})
 					}
 				}
-				yield(Value{X_1: ErrNotFound})
+				yield(Value{X_1: util.ErrNotFound})
 				return true
 			})
 		},
@@ -174,7 +169,7 @@ func (p NodeSet) XGo_0() (key string, val Node, err error) {
 	if p.Err != nil {
 		return "", nil, p.Err
 	}
-	err = ErrNotFound
+	err = util.ErrNotFound
 	p.Data(func(k string, n Node) bool {
 		key, val, err = k, n, nil
 		return false
@@ -189,14 +184,14 @@ func (p NodeSet) XGo_1() (key string, val Node, err error) {
 		return "", nil, p.Err
 	}
 	first := true
-	err = ErrNotFound
+	err = util.ErrNotFound
 	p.Data(func(k string, n Node) bool {
 		if first {
 			key, val, err = k, n, nil
 			first = false
 			return true
 		}
-		err = ErrMultiEntities
+		err = util.ErrMultiEntities
 		return false
 	})
 	return
