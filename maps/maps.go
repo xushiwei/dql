@@ -82,13 +82,18 @@ func (p NodeSet) XGo_Node(name string) NodeSet {
 	return NodeSet{
 		Data: func(yield func(string, Node) bool) {
 			p.Data(func(_ string, node Node) bool {
-				if v, ok := node[name].(map[string]any); ok {
-					return yield(name, v)
-				}
-				return true
+				return yieldNode(node, name, yield)
 			})
 		},
 	}
+}
+
+// yieldNode yields the child node with the specified name if it exists.
+func yieldNode(node Node, name string, yield func(string, Node) bool) bool {
+	if v, ok := node[name].(map[string]any); ok {
+		return yield(name, v)
+	}
+	return true
 }
 
 // XGo_Child returns a NodeSet containing all child nodes of the nodes in the NodeSet.
@@ -99,17 +104,22 @@ func (p NodeSet) XGo_Child() NodeSet {
 	return NodeSet{
 		Data: func(yield func(string, Node) bool) {
 			p.Data(func(_ string, node Node) bool {
-				for k, v := range node {
-					if child, ok := v.(map[string]any); ok {
-						if !yield(k, child) {
-							return false
-						}
-					}
-				}
-				return true
+				return rangeChildNodes(node, yield)
 			})
 		},
 	}
+}
+
+// rangeChildNodes yields all child nodes of the given node.
+func rangeChildNodes(node Node, yield func(string, Node) bool) bool {
+	for k, v := range node {
+		if child, ok := v.(map[string]any); ok {
+			if !yield(k, child) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // XGo_Any returns a NodeSet containing all descendant nodes of the nodes in
@@ -152,16 +162,18 @@ func (p NodeSet) XGo_Attr(name string) ValueSet {
 	return ValueSet{
 		Data: func(yield func(Value) bool) {
 			p.Data(func(_ string, node Node) bool {
-				for k, v := range node {
-					if k == name {
-						return yield(Value{X_0: v})
-					}
-				}
-				yield(Value{X_1: util.ErrNotFound})
-				return true
+				return yieldAttr(node, name, yield)
 			})
 		},
 	}
+}
+
+// yieldAttr yields the attribute value or ErrNotFound if the attribute does not exist.
+func yieldAttr(node Node, name string, yield func(Value) bool) bool {
+	if v, ok := node[name]; ok {
+		return yield(Value{X_0: v})
+	}
+	return yield(Value{X_1: util.ErrNotFound})
 }
 
 // XGo_0 returns the first node in the NodeSet, or ErrNotFound if the set is empty.

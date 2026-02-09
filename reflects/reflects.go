@@ -103,13 +103,27 @@ func (p NodeSet) XGo_Node(name string) NodeSet {
 	return NodeSet{
 		Data: func(yield func(string, Node) bool) {
 			p.Data(func(_ string, node Node) bool {
-				if v := lookup(node, name); isNode(v) {
-					return yield(name, v)
-				}
-				return true
+				return yieldNode(node, name, yield)
 			})
 		},
 	}
+}
+
+// yieldNode yields the child node with the specified name if it exists.
+func yieldNode(node Node, name string, yield func(string, Node) bool) bool {
+	if v := lookup(node, name); isNode(v) {
+		return yield(name, v)
+	}
+	return true
+}
+
+// yieldAttr yields the attribute value with the specified name if it exists.
+// If the attribute does not exist, yields a Value with ErrNotFound.
+func yieldAttr(node Node, name string, yield func(Value) bool) bool {
+	if v := lookup(node, name); v.IsValid() {
+		return yield(Value{X_0: v.Interface()})
+	}
+	return yield(Value{X_1: util.ErrNotFound})
 }
 
 func lookup(node Node, name string) (ret Node) {
@@ -140,7 +154,7 @@ func isNode(v reflect.Value) bool {
 	return kind == reflect.Struct || kind == reflect.Map
 }
 
-func rangeNode(node Node, yield func(string, Node) bool) bool {
+func rangeChildNodes(node Node, yield func(string, Node) bool) bool {
 	kind := node.Kind()
 	switch kind {
 	case reflect.Pointer, reflect.Interface:
@@ -181,7 +195,7 @@ func rangeAnyNodes(key string, node Node, yield func(string, Node) bool) bool {
 	if !yield(key, node) {
 		return false
 	}
-	return rangeNode(node, func(k string, n Node) bool {
+	return rangeChildNodes(node, func(k string, n Node) bool {
 		return rangeAnyNodes(k, n, yield)
 	})
 }
@@ -194,7 +208,7 @@ func (p NodeSet) XGo_Child() NodeSet {
 	return NodeSet{
 		Data: func(yield func(string, Node) bool) {
 			p.Data(func(_ string, node Node) bool {
-				return rangeNode(node, yield)
+				return rangeChildNodes(node, yield)
 			})
 		},
 	}
@@ -225,11 +239,7 @@ func (p NodeSet) XGo_Attr(name string) ValueSet {
 	return ValueSet{
 		Data: func(yield func(Value) bool) {
 			p.Data(func(_ string, node Node) bool {
-				if v := lookup(node, name); v.IsValid() {
-					return yield(Value{X_0: v.Interface()})
-				}
-				yield(Value{X_1: util.ErrNotFound})
-				return true
+				return yieldAttr(node, name, yield)
 			})
 		},
 	}
