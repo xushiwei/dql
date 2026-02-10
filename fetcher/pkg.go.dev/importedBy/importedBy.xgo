@@ -17,8 +17,6 @@
 package importedBy
 
 import (
-	"strings"
-
 	"github.com/goplus/dql/html"
 	"github.com/goplus/dql/fetcher"
 )

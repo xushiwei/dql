@@ -17,8 +17,6 @@
 package issueTask
 
 import (
-	"strings"
-
 	"github.com/goplus/dql/html"
 	"github.com/goplus/dql/fetcher"
 )
@@ -46,10 +44,10 @@ func New(input any, doc html.NodeSet) Result {
 // URL returns the URL from the input.
 func URL(input any) string {
 	issue := input.(string)
-	if strings.hasPrefix(issue, "https://github.com/") {
+	if issue.hasPrefix("https://github.com/") {
 		return issue
 	}
-	return "https://github.com/" + strings.replace(issue, "#", "/issues/", 1)
+	return "https://github.com/" + issue.replace("#", "/issues/", 1)
 }
 
 func init() {
