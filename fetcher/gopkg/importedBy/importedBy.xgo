@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package issue_task
+package importedBy
 
 import (
 	"strings"
@@ -23,35 +23,28 @@ import (
 	"github.com/goplus/dql/fetcher"
 )
 
-// Task represents a GitHub issue task item.
-type Task struct {
-	Desc string `json:"desc"`
-	Done bool   `json:"done"`
-}
-
-// Result represents the result of issue task fetcher.
 type Result struct {
-	Issue string `json:"issue"` // goplus/llgo#642
-	Tasks []Task `json:"tasks"`
+	Path       string `json:"path"` // package path
+	ImportedBy int    `json:"importedBy"`
 }
 
-// New extracts issue tasks from the given document and returns the Result.
 func New(input any, doc html.NodeSet) Result {
-	issue := input.(string)
-	taskList := doc.**.ul@($class == "contains-task-list").one
-	tasks := [Task{li.text!, li.firstElementChild.hasAttr("checked")} for li in taskList.li]
-	return {issue, tasks}
+	const importedBy = "Imported By:"
+	path := input.(string)
+	a := doc.**.a@(($"aria-label"?:"").hasPrefix(importedBy)).one
+	if !a.ok {
+		return {path, 0}
+	}
+	label := a.$"aria-label"!
+	importedBy := label[len(importedBy):].trimSpace.replaceAll(",", "").int!
+	return {path, importedBy}
 }
 
-// URL returns the URL from the input.
+// URL returns the input URL for the given input.
 func URL(input any) string {
-	issue := input.(string)
-	if strings.hasPrefix(issue, "https://github.com/") {
-		return issue
-	}
-	return "https://github.com/" + strings.replace(issue, "#", "/issues/", 1)
+	return "https://pkg.go.dev/" + input.(string)
 }
 
 func init() {
-	fetcher.register("github/issue_task", New, URL)
+	fetcher.register("gopkg/importedBy", New, URL)
 }
