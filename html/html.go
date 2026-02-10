@@ -168,28 +168,43 @@ func rangeChildNodes(n *Node, yield func(*Node) bool) bool {
 	return true
 }
 
-// XGo_Any returns a NodeSet containing all descendant nodes of the nodes in
-// the NodeSet, including the nodes themselves.
-func (p NodeSet) XGo_Any() NodeSet {
+// XGo_Any returns a NodeSet containing all descendant nodes (including the
+// nodes themselves) with the specified name.
+// If name is "textNode", it returns all text nodes.
+//   - .**.name
+//   - .**.“element-name”
+func (p NodeSet) XGo_Any(name string) NodeSet {
 	if p.Err != nil {
 		return p
 	}
 	return NodeSet{
 		Data: func(yield func(*Node) bool) {
 			p.Data(func(node *Node) bool {
-				return rangeAnyNodes(node, yield)
+				return rangeAnyNodes(node, name, yield)
 			})
 		},
 	}
 }
 
-// rangeAnyNodes recursively yields the node and all its descendant nodes.
-func rangeAnyNodes(n *Node, yield func(*Node) bool) bool {
-	if !yield(n) {
-		return false
+// rangeAnyNodes yields all descendant nodes of the given node that match the
+// specified name. If name is "textNode", it yields text nodes.
+func rangeAnyNodes(n *Node, name string, yield func(*Node) bool) bool {
+	switch name {
+	case "textNode":
+		if n.Type == html.TextNode {
+			if !yield(n) {
+				return false
+			}
+		}
+	default:
+		if n.Type == html.ElementNode && n.Data == name {
+			if !yield(n) {
+				return false
+			}
+		}
 	}
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		if !rangeAnyNodes(c, yield) {
+		if !rangeAnyNodes(c, name, yield) {
 			return false
 		}
 	}

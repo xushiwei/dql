@@ -196,13 +196,16 @@ func rangeChildNodes(node Node, yield func(string, Node) bool) bool {
 	return true
 }
 
-// rangeAnyNodes recursively yields the node and all its descendant nodes.
-func rangeAnyNodes(key string, node Node, yield func(string, Node) bool) bool {
-	if !yield(key, node) {
-		return false
+// rangeAnyNodes yields all descendant nodes of the given node that match the
+// specified name.
+func rangeAnyNodes(key, name string, node Node, yield func(string, Node) bool) bool {
+	if key == name {
+		if !yield(key, node) {
+			return false
+		}
 	}
 	return rangeChildNodes(node, func(k string, n Node) bool {
-		return rangeAnyNodes(k, n, yield)
+		return rangeAnyNodes(k, name, n, yield)
 	})
 }
 
@@ -220,16 +223,18 @@ func (p NodeSet) XGo_Child() NodeSet {
 	}
 }
 
-// XGo_Any returns a NodeSet containing all descendant nodes of the nodes in
-// the NodeSet, including the nodes themselves.
-func (p NodeSet) XGo_Any() NodeSet {
+// XGo_Any returns a NodeSet containing all descendant nodes (including the
+// nodes themselves) with the specified name.
+//   - .**.name
+//   - .**.“element-name”
+func (p NodeSet) XGo_Any(name string) NodeSet {
 	if p.Err != nil {
 		return p
 	}
 	return NodeSet{
 		Data: func(yield func(string, Node) bool) {
 			p.Data(func(key string, node Node) bool {
-				return rangeAnyNodes(key, node, yield)
+				return rangeAnyNodes(key, name, node, yield)
 			})
 		},
 	}
