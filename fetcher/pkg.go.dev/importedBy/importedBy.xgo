@@ -26,6 +26,8 @@ type Result struct {
 	ImportedBy int    `json:"importedBy"`
 }
 
+// New extracts the number of packages that import the given package from
+// the given HTML document and returns the Result.
 func New(input any, doc html.NodeSet) Result {
 	const importedBy = "Imported By:"
 	path := input.(string)
