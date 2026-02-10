@@ -41,6 +41,7 @@ func New(input any, doc html.NodeSet) Result {
 }
 
 // URL returns the input URL for the given input.
+// Input is expected to be a Go package path.
 func URL(input any) string {
 	return "https://pkg.go.dev/" + input.(string)
 }

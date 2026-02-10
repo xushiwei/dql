@@ -42,6 +42,8 @@ func New(input any, doc html.NodeSet) Result {
 }
 
 // URL returns the URL from the input.
+// Input can be either a full github issue URL or a shorthand format
+// like "goplus/llgo#642".
 func URL(input any) string {
 	issue := input.(string)
 	if issue.hasPrefix("https://github.com/") {

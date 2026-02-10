@@ -56,6 +56,8 @@ func New(input any, doc html.NodeSet) Result {
 }
 
 // URL returns the input URL for the given input.
+// Input is expected to be a function name, and the URL will be the function's
+// documentation page on pytorch.org.
 func URL(input any) string {
 	return "https://pytorch.org/docs/stable/generated/torch." + input.(string) + ".html"
 }

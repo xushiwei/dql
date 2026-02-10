@@ -34,6 +34,8 @@ func New(input any, doc hdq.NodeSet) Result {
 }
 
 // URL returns the URL from the input.
+// Input is expected to be a URL, and the fetcher will extract all hrefs
+// from the page at that URL.
 func URL(input any) string {
 	return input.(string)
 }
