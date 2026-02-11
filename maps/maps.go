@@ -36,6 +36,15 @@ type NodeSet struct {
 	Err  error
 }
 
+// Root creates a NodeSet containing the provided root node.
+func Root(doc Node) NodeSet {
+	return NodeSet{
+		Data: func(yield func(Node) bool) {
+			yield(doc)
+		},
+	}
+}
+
 // New creates a NodeSet containing a single node from the provided map.
 func New(doc map[string]any) NodeSet {
 	return NodeSet{
@@ -47,6 +56,7 @@ func New(doc map[string]any) NodeSet {
 
 // Source creates a NodeSet from various types of sources:
 // - map[string]any: creates a NodeSet containing the single provided node.
+// - Node: creates a NodeSet containing the single provided node.
 // - iter.Seq[Node]: directly uses the provided sequence of nodes.
 // - NodeSet: returns the provided NodeSet as is.
 // If the source type is unsupported, it panics.
@@ -54,6 +64,8 @@ func Source(r any) (ret NodeSet) {
 	switch v := r.(type) {
 	case map[string]any:
 		return New(v)
+	case Node:
+		return Root(v)
 	case iter.Seq[Node]:
 		return NodeSet{Data: v}
 	case NodeSet:
@@ -64,11 +76,15 @@ func Source(r any) (ret NodeSet) {
 }
 
 // XGo_Enum returns an iterator over the nodes in the NodeSet.
-func (p NodeSet) XGo_Enum() iter.Seq[Node] {
+func (p NodeSet) XGo_Enum() iter.Seq[NodeSet] {
 	if p.Err != nil {
-		return dql.NopIter[Node]
+		return dql.NopIter[NodeSet]
 	}
-	return p.Data
+	return func(yield func(NodeSet) bool) {
+		p.Data(func(node Node) bool {
+			return yield(Root(node))
+		})
+	}
 }
 
 // XGo_Select returns a NodeSet containing the nodes with the specified name.

@@ -37,6 +37,15 @@ type NodeSet struct {
 	Err  error
 }
 
+// Root creates a NodeSet containing the provided root node.
+func Root(doc *Node) NodeSet {
+	return NodeSet{
+		Data: func(yield func(*Node) bool) {
+			yield(doc)
+		},
+	}
+}
+
 // New parses the HTML document from the provided reader and returns a NodeSet
 // containing the root node. If there is an error during parsing, the NodeSet's
 // Err field is set.
@@ -45,17 +54,14 @@ func New(r io.Reader) NodeSet {
 	if err != nil {
 		return NodeSet{Err: err}
 	}
-	return NodeSet{
-		Data: func(yield func(*Node) bool) {
-			yield(doc)
-		},
-	}
+	return Root(doc)
 }
 
 // Source creates a NodeSet from various types of sources:
 // - string: treated as an URL to read HTML content from.
 // - []byte: treated as raw HTML content.
 // - io.Reader: reads HTML content from the reader.
+// - *Node: creates a NodeSet containing the single provided node.
 // - iter.Seq[*Node]: directly uses the provided sequence of nodes.
 // - NodeSet: returns the provided NodeSet as is.
 // If the source type is unsupported, it panics.
@@ -73,6 +79,8 @@ func Source(r any) (ret NodeSet) {
 		return New(r)
 	case io.Reader:
 		return New(v)
+	case *Node:
+		return Root(v)
 	case iter.Seq[*Node]:
 		return NodeSet{Data: v}
 	case NodeSet:
@@ -85,11 +93,15 @@ func Source(r any) (ret NodeSet) {
 // -----------------------------------------------------------------------------
 
 // XGo_Enum returns an iterator over the nodes in the NodeSet.
-func (p NodeSet) XGo_Enum() iter.Seq[*Node] {
+func (p NodeSet) XGo_Enum() iter.Seq[NodeSet] {
 	if p.Err != nil {
-		return dql.NopIter[*Node]
+		return dql.NopIter[NodeSet]
 	}
-	return p.Data
+	return func(yield func(NodeSet) bool) {
+		p.Data(func(node *Node) bool {
+			return yield(Root(node))
+		})
+	}
 }
 
 // XGo_Select returns a NodeSet containing the nodes with the specified name.

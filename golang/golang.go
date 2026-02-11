@@ -75,6 +75,9 @@ func From(filename string, src any, conf ...Config) NodeSet {
 // - []byte: treated as Go source code.
 // - *bytes.Buffer: treated as Go source code.
 // - io.Reader: treated as Go source code.
+// - *ast.File: creates a NodeSet from the provided *ast.File.
+// - reflect.Value: creates a NodeSet from the provided reflect.Value (expected to be *ast.File).
+// - Node: creates a NodeSet containing the single provided node.
 // - iter.Seq[Node]: returns the provided sequence as a NodeSet.
 // - NodeSet: returns the provided NodeSet as is.
 // If the source type is unsupported, it panics.
@@ -88,6 +91,12 @@ func Source(r any, conf ...Config) (ret NodeSet) {
 		return From("", v, conf...)
 	case io.Reader:
 		return From("", v, conf...)
+	case *ast.File:
+		return New(v)
+	case reflect.Value:
+		return reflects.New(v)
+	case Node:
+		return reflects.Root(v)
 	case iter.Seq[Node]:
 		return NodeSet{Data: v}
 	case NodeSet:
