@@ -12,7 +12,7 @@ const _ = true
 func main() {
 	for
 //line dqltest/dqltest.xgo:17:1
-	e := range fs.New(`..`).XGo_Any("file").Match("in.htm").XGo_Enum() {
+	e := range fs.New(`.`).XGo_Any("file").Match("in.htm").XGo_Enum() {
 //line dqltest/dqltest.xgo:18:1
 		fmt.Println(e.Path())
 	}
