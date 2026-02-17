@@ -1,2 +1,2 @@
-# dql
-DOM Query Language
+DQL (DOM Query Language)
+=====

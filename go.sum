@@ -1,4 +1,2 @@
-github.com/goccy/go-yaml v1.19.2 h1:PmFC1S6h8ljIz6gMRBopkjP1TVT7xuwrButHID66PoM=
-github.com/goccy/go-yaml v1.19.2/go.mod h1:XBurs7gK8ATbW4ZPGKgcbrY1Br56PdM69F7LkFRi1kA=
-golang.org/x/net v0.49.0 h1:eeHFmOGUTtaaPSGNmjBKpbng9MulQsJURQUAfUwY++o=
-golang.org/x/net v0.49.0/go.mod h1:/ysNB2EvaqvesRkuLAyjI1ycPZlQHM3q01F02UY/MV8=
+github.com/goplus/xgo v1.6.4-0.20260217042109-7cb7d57d1185 h1:ex/xiwSNMM3WJ5YjAfAoUbeWR7jjVHcmyTbNSQzO5eA=
+github.com/goplus/xgo v1.6.4-0.20260217042109-7cb7d57d1185/go.mod h1:5wXXmETmogjKz1IsLcKiIRV6AVudS1Mx2Ih1p6YxS4Y=
