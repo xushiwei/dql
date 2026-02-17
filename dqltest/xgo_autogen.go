@@ -4,16 +4,21 @@ package main
 
 import (
 	"fmt"
+	_ "github.com/goplus/xgo/dql/fetcher/github.com/issueTask"
+	_ "github.com/goplus/xgo/dql/fetcher/github.com/repoList"
+	_ "github.com/goplus/xgo/dql/fetcher/hrefs"
+	_ "github.com/goplus/xgo/dql/fetcher/pkg.go.dev/importedBy"
+	_ "github.com/goplus/xgo/dql/fetcher/pytorch.org/fndoc"
 	"github.com/goplus/xgo/encoding/fs"
 )
 
 const _ = true
-//line dqltest/dqltest.xgo:17
+//line dqltest/dqltest.xgo:25
 func main() {
 	for
-//line dqltest/dqltest.xgo:17:1
+//line dqltest/dqltest.xgo:25:1
 	e := range fs.New(`.`).XGo_Any("file").Match("in.htm").XGo_Enum() {
-//line dqltest/dqltest.xgo:18:1
+//line dqltest/dqltest.xgo:26:1
 		fmt.Println(e.Path())
 	}
 }

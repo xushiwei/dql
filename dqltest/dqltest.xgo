@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+import (
+	_ "github.com/goplus/xgo/dql/fetcher/github.com/issueTask"
+	_ "github.com/goplus/xgo/dql/fetcher/github.com/repoList"
+	_ "github.com/goplus/xgo/dql/fetcher/hrefs"
+	_ "github.com/goplus/xgo/dql/fetcher/pkg.go.dev/importedBy"
+	_ "github.com/goplus/xgo/dql/fetcher/pytorch.org/fndoc"
+)
+
 for e in fs`.`.**.file.match("in.htm") {
 	echo e.path
 }
