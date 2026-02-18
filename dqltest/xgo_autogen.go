@@ -116,9 +116,9 @@ func main() {
 			errs++
 		}
 	}
-//line dqltest/dqltest.xgo:55:1
-	if errs > 0 {
 //line dqltest/dqltest.xgo:56:1
+	if errs > 0 {
+//line dqltest/dqltest.xgo:57:1
 		osx.Fatal(stringutil.Concat(">>> ", strconv.Itoa(errs), " errors occurred"))
 	}
 }
