@@ -31,6 +31,7 @@ import (
 )
 
 t := logt.new
+errs := 0
 
 for e in fs`.`.**.file.match("*.zip") {
 	path := e.path!
@@ -47,6 +48,10 @@ for e in fs`.`.**.file.match("*.zip") {
 	outFile := dir + "/result.txt"
 	expFile := dir + "/out.json"
 	if test.diff(t, outFile, result, os.readFile(expFile)?:nil) {
-		t.errorln fetchType, ": unexpect result"
+		t.errorln dir, "failed: unexpect result"
+		errs++
 	}
+}
+if errs > 0 {
+	fatal ">>> ${errs} errors occurred"
 }

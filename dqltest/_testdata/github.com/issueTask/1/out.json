@@ -1,0 +1,77 @@
+{
+	"issue": "gopkgsupport",
+	"tasks": [
+		{
+			"desc": "fmt* (Imported By: 4513111)\n",
+			"done": true
+		},
+		{
+			"desc": "time* (Imported By: 2238303)\n",
+			"done": true
+		},
+		{
+			"desc": "strings (Imported By: 2104027)\n",
+			"done": true
+		},
+		{
+			"desc": "os* (Imported By: 1956039)\n",
+			"done": true
+		},
+		{
+			"desc": "context (Imported By: 1460725)\n",
+			"done": true
+		},
+		{
+			"desc": "net/http (Imported By: 1415440)\n",
+			"done": false
+		},
+		{
+			"desc": "errors (Imported By: 1294097)\n",
+			"done": true
+		},
+		{
+			"desc": "io (Imported By: 1268791)\n",
+			"done": true
+		},
+		{
+			"desc": "strconv (Imported By: 1206047)\n",
+			"done": true
+		},
+		{
+			"desc": "encoding/json (Imported By: 1201739)\n",
+			"done": false
+		},
+		{
+			"desc": "log (Imported By: 1117493)\n",
+			"done": true
+		},
+		{
+			"desc": "sync* (Imported By: 1075441)\n",
+			"done": true
+		},
+		{
+			"desc": "bytes (Imported By: 1021859)\n",
+			"done": true
+		},
+		{
+			"desc": "io/ioutil (Imported By: 794650)\n",
+			"done": true
+		},
+		{
+			"desc": "reflect* (Imported By: 647872)\n",
+			"done": true
+		},
+		{
+			"desc": "path/filepath (Imported By: 541715)\n",
+			"done": true
+		},
+		{
+			"desc": "net (Imported By: 538522)\n",
+			"done": false
+		},
+		{
+			"desc": "math (Imported By: 502954)\n",
+			"done": true
+		}
+	]
+}
