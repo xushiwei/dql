@@ -1,5 +1,5 @@
-github.com/goplus/xgo v1.6.4-0.20260217151542-af5fdb20c004 h1:lU6862rICz+ZuRCDnwKTDZ2jYPefi/deRcKhJi7PNzc=
-github.com/goplus/xgo v1.6.4-0.20260217151542-af5fdb20c004/go.mod h1:5wXXmETmogjKz1IsLcKiIRV6AVudS1Mx2Ih1p6YxS4Y=
+github.com/goplus/xgo v1.6.4-0.20260218024157-e500c376b8d3 h1:BocCEyC5DFIwLhzbBUbmEi7rAQKmJ6ivT2M/arhE9uY=
+github.com/goplus/xgo v1.6.4-0.20260218024157-e500c376b8d3/go.mod h1:617e0Q+SAj1Jubii5T5uWAVdTt4bpkwA5cEn9H+h2jI=
 github.com/qiniu/x v1.16.2 h1:onFQ5Yu8L7GtX5MRidXTbQsDRrRGyoINjON5uWrTkuE=
 github.com/qiniu/x v1.16.2/go.mod h1:AiovSOCaRijaf3fj+0CBOpR1457pn24b0Vdb1JpwhII=
 golang.org/x/net v0.50.0 h1:ucWh9eiCGyDR3vtzso0WMQinm2Dnt8cFMuQa9K33J60=

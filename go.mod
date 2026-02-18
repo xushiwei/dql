@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.2
 
 require (
-	github.com/goplus/xgo v1.6.4-0.20260217151542-af5fdb20c004
+	github.com/goplus/xgo v1.6.4-0.20260218024157-e500c376b8d3
 	github.com/qiniu/x v1.16.2
 )
 
