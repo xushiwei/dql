@@ -34,19 +34,18 @@ t := logt.new
 
 for e in fs`.`.**.file.match("*.zip") {
 	path := e.path!
-	t.log "==>", path
-
 	parts := path.split("/")
 	n := len(parts)
+	dir := parts[:n-1].join("/")
+	t.log "==>", dir
+
 	input := parts[n-1].trimSuffix(".zip")
 	fetchType := parts[1:n-2].join("/")
 	doc := fetcher.from(fetchType, input, "zip:"+path+"#index.htm")!
 	result := json.marshalIndent(doc, "", "\t")!
 
-	dir := parts[:n-1].join("/")
 	outFile := dir + "/result.txt"
 	expFile := dir + "/out.json"
-
 	if test.diff(t, outFile, result, os.readFile(expFile)!) {
 		t.errorln fetchType, ": unexpect result"
 	}
