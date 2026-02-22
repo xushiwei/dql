@@ -22,6 +22,7 @@ import (
 	"iter"
 	"os"
 	"reflect"
+	"sync"
 	"unsafe"
 
 	"github.com/goplus/xgo/dql"
@@ -82,6 +83,16 @@ type Config struct {
 	IgnoreCase                     bool
 }
 
+var (
+	cachedWd     string
+	cachedWdOnce sync.Once
+)
+
+func getWd() string {
+	cachedWdOnce.Do(func() { cachedWd, _ = os.Getwd() })
+	return cachedWd
+}
+
 // parse parses TypeScript source code from the given filename or source.
 func parse(filename string, src any, conf ...Config) (f *ast.SourceFile, err error) {
 	b, err := stream.ReadSourceFromURI(filename, src)
@@ -91,8 +102,7 @@ func parse(filename string, src any, conf ...Config) (f *ast.SourceFile, err err
 	if filename == "" { // allow empty filename
 		filename = "/index.ts"
 	} else {
-		wd, _ := os.Getwd()
-		filename = tspath.GetNormalizedAbsolutePath(filename, wd)
+		filename = tspath.GetNormalizedAbsolutePath(filename, getWd())
 	}
 	var c Config
 	if len(conf) > 0 {
