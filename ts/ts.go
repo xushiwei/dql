@@ -25,11 +25,11 @@ import (
 
 	"github.com/goplus/xgo/dql"
 	"github.com/goplus/xgo/dql/reflects"
-	"github.com/goplus/xgo/parser/iox"
 	"github.com/microsoft/typescript-go/ast"
 	"github.com/microsoft/typescript-go/core"
 	"github.com/microsoft/typescript-go/parser"
 	"github.com/microsoft/typescript-go/tspath"
+	"github.com/qiniu/x/stream"
 )
 
 const (
@@ -83,7 +83,7 @@ type Config struct {
 
 // parse parses TypeScript source code from the given filename or source.
 func parse(filename string, src any, conf ...Config) (f *ast.SourceFile, err error) {
-	b, err := iox.ReadSourceLocal(filename, src)
+	b, err := stream.ReadSourceFromURI(filename, src)
 	if err != nil {
 		return
 	}

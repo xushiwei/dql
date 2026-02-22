@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	XGoPackage = "github.com/goplus/xgo/dql/ts"
+	XGoPackage = "github.com/goplus/dql/ts"
 )
 
 // Object represents a TypeScript File.

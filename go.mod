@@ -3,9 +3,9 @@ module github.com/goplus/dql
 go 1.26
 
 require (
-	github.com/goplus/xgo v1.6.6-0.20260219104414-90d1953ee8fa
+	github.com/goplus/xgo v1.6.6-0.20260222113824-d2a852a7c559
 	github.com/microsoft/typescript-go v0.0.0-20260221173044-5c412f3902d5
-	github.com/qiniu/x v1.16.2
+	github.com/qiniu/x v1.16.3
 )
 
 replace github.com/microsoft/typescript-go => github.com/goplus/typescript v0.1.1
