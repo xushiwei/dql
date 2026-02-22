@@ -260,11 +260,10 @@ func (p NodeSet) XGo_Attr__1(name string) (val any, err error) {
 	val, err = p.NodeSet.XGo_Attr__1(name)
 	if err == nil {
 		switch v := val.(type) {
-		case *ast.Symbol:
-			if v != nil {
-				return v.Name, nil
+		case *ast.DeclarationName:
+			if v != nil && v.Kind == ast.KindIdentifier {
+				return v.AsIdentifier().Text, nil
 			}
-			return "", nil
 			/* TODO(xsw): case *ast.BasicLit:
 			if v != nil {
 				return v.Value, nil
