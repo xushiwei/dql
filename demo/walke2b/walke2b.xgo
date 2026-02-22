@@ -1,0 +1,11 @@
+import (
+	"github.com/goplus/dql/ts"
+
+	_ "github.com/qiniu/x/stream/zip"
+)
+
+doc := ts.source("zip:index.d.ts.zip#index.d.ts")
+
+for n in doc.statements.nodes.* {
+	echo n.$kind
+}

@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"io"
 	"iter"
+	"os"
 	"reflect"
 	"unsafe"
 
@@ -87,7 +88,12 @@ func parse(filename string, src any, conf ...Config) (f *ast.SourceFile, err err
 	if err != nil {
 		return
 	}
-	filename = tspath.GetNormalizedAbsolutePath(filename, "")
+	if filename == "" { // allow empty filename
+		filename = "/index.ts"
+	} else {
+		wd, _ := os.Getwd()
+		filename = tspath.GetNormalizedAbsolutePath(filename, wd)
+	}
 	var c Config
 	if len(conf) > 0 {
 		c = conf[0]
@@ -237,7 +243,6 @@ func (p NodeSet) Ok() bool {
 	return p.Err == nil
 }
 
-/*
 // XGo_Attr returns the value of the specified attribute from the first node in the
 // NodeSet. It only retrieves the attribute from the first node.
 //   - $name
@@ -255,21 +260,20 @@ func (p NodeSet) XGo_Attr__1(name string) (val any, err error) {
 	val, err = p.NodeSet.XGo_Attr__1(name)
 	if err == nil {
 		switch v := val.(type) {
-		case *ast.Ident:
+		case *ast.Symbol:
 			if v != nil {
 				return v.Name, nil
 			}
 			return "", nil
-		case *ast.BasicLit:
+			/* TODO(xsw): case *ast.BasicLit:
 			if v != nil {
 				return v.Value, nil
 			}
-			return "", nil
+			return "", nil */
 		}
 	}
 	return
 }
-*/
 
 // Class returns the class name of the first node in the NodeSet.
 func (p NodeSet) Class() string {
