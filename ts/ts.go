@@ -14,14 +14,22 @@
  * limitations under the License.
  */
 
-package xgo
+package ts
 
 import (
+	"bytes"
+	"io"
 	"iter"
 	"reflect"
+	"unsafe"
 
-	"github.com/microsoft/typescript-go/ast"
+	"github.com/goplus/xgo/dql"
 	"github.com/goplus/xgo/dql/reflects"
+	"github.com/goplus/xgo/parser/iox"
+	"github.com/microsoft/typescript-go/ast"
+	"github.com/microsoft/typescript-go/core"
+	"github.com/microsoft/typescript-go/parser"
+	"github.com/microsoft/typescript-go/tspath"
 )
 
 const (
@@ -64,6 +72,208 @@ func New(f *ast.SourceFile) NodeSet {
 	return NodeSet{
 		NodeSet: reflects.New(reflect.ValueOf(f)),
 	}
+}
+
+// Config represents the configuration for parsing XGo source code.
+type Config struct {
+	ExternalModuleIndicatorOptions ast.ExternalModuleIndicatorOptions
+	ScriptKind                     core.ScriptKind
+	IgnoreCase                     bool
+}
+
+// parse parses XGo source code from the given filename or source.
+func parse(filename string, src any, conf ...Config) (f *ast.SourceFile, err error) {
+	b, err := iox.ReadSourceLocal(filename, src)
+	if err != nil {
+		return
+	}
+	filename = tspath.GetNormalizedAbsolutePath(filename, "")
+	var c Config
+	if len(conf) > 0 {
+		c = conf[0]
+	}
+	if c.ScriptKind == 0 {
+		c.ScriptKind = core.GetScriptKindFromFileName(filename)
+	}
+	opts := ast.SourceFileParseOptions{
+		FileName:                       filename,
+		Path:                           tspath.ToPath(filename, "/", !c.IgnoreCase),
+		ExternalModuleIndicatorOptions: c.ExternalModuleIndicatorOptions,
+	}
+	sourceText := unsafe.String(unsafe.SliceData(b), len(b))
+	return parser.ParseSourceFile(opts, sourceText, c.ScriptKind), nil
+}
+
+// From parses Go source code from the given filename or source, returning a NodeSet.
+// An optional Config can be provided to customize the parsing behavior.
+func From(filename string, src any, conf ...Config) NodeSet {
+	f, err := parse(filename, src, conf...)
+	if err != nil {
+		return NodeSet{NodeSet: reflects.NodeSet{Err: err}}
+	}
+	return New(f)
+}
+
+// Source creates a NodeSet from various types of Go sources.
+// It supports the following source types:
+// - string: treats the string as a file path, opens the file, and reads Go source code from it.
+// - []byte: treated as Go source code.
+// - *bytes.Buffer: treated as Go source code.
+// - io.Reader: treated as Go source code.
+// - *ast.File: creates a NodeSet from the provided *ast.File.
+// - reflect.Value: creates a NodeSet from the provided reflect.Value (expected to be *ast.File).
+// - Node: creates a NodeSet containing the single provided node.
+// - iter.Seq[Node]: returns the provided sequence as a NodeSet.
+// - NodeSet: returns the provided NodeSet as is.
+// If the source type is unsupported, it panics.
+func Source(r any, conf ...Config) (ret NodeSet) {
+	switch v := r.(type) {
+	case string:
+		return From(v, nil, conf...)
+	case []byte:
+		return From("", v, conf...)
+	case *bytes.Buffer:
+		return From("", v, conf...)
+	case io.Reader:
+		return From("", v, conf...)
+	case *ast.SourceFile:
+		return New(v)
+	case reflect.Value:
+		return NodeSet{NodeSet: reflects.New(v)}
+	case Node:
+		return NodeSet{NodeSet: reflects.Root(v)}
+	case iter.Seq[Node]:
+		return NodeSet{NodeSet: reflects.NodeSet{Data: v}}
+	case NodeSet:
+		return v
+	default:
+		panic("dql/xgo.Source: unsupported source type")
+	}
+}
+
+// -----------------------------------------------------------------------------
+
+// XGo_Enum returns an iterator over the nodes in the NodeSet.
+func (p NodeSet) XGo_Enum() iter.Seq[NodeSet] {
+	if p.Err != nil {
+		return dql.NopIter[NodeSet]
+	}
+	return func(yield func(NodeSet) bool) {
+		p.Data(func(node Node) bool {
+			return yield(Root(node))
+		})
+	}
+}
+
+// XGo_Select returns a NodeSet containing the nodes with the specified name.
+//   - @name
+//   - @"element-name"
+func (p NodeSet) XGo_Select(name string) NodeSet {
+	return NodeSet{
+		NodeSet: p.NodeSet.XGo_Select(name),
+	}
+}
+
+// XGo_Elem returns a NodeSet containing the child nodes with the specified name.
+//   - .name
+//   - .“element-name”
+func (p NodeSet) XGo_Elem(name string) NodeSet {
+	return NodeSet{
+		NodeSet: p.NodeSet.XGo_Elem(name),
+	}
+}
+
+// XGo_Child returns a NodeSet containing all child nodes of the nodes in the NodeSet.
+func (p NodeSet) XGo_Child() NodeSet {
+	return NodeSet{
+		NodeSet: p.NodeSet.XGo_Child(),
+	}
+}
+
+// XGo_Any returns a NodeSet containing all descendant nodes (including the
+// nodes themselves) with the specified name.
+// If name is "", it returns all nodes.
+//   - .**.name
+//   - .**.“element-name”
+//   - .**.*
+func (p NodeSet) XGo_Any(name string) NodeSet {
+	return NodeSet{
+		NodeSet: p.NodeSet.XGo_Any(name),
+	}
+}
+
+// -----------------------------------------------------------------------------
+
+// All returns a NodeSet containing all nodes.
+// It's a cache operation for performance optimization when you need to traverse
+// the nodes multiple times.
+func (p NodeSet) All() NodeSet {
+	return NodeSet{
+		NodeSet: p.NodeSet.XGo_all(),
+	}
+}
+
+// One returns a NodeSet containing the first node.
+// It's a performance optimization when you only need the first node (stop early).
+func (p NodeSet) One() NodeSet {
+	return NodeSet{
+		NodeSet: p.NodeSet.XGo_one(),
+	}
+}
+
+// Single returns a NodeSet containing the single node.
+// If there are zero or more than one nodes, it returns an error.
+// ErrNotFound or ErrMultipleResults is returned accordingly.
+func (p NodeSet) Single() NodeSet {
+	return NodeSet{
+		NodeSet: p.NodeSet.XGo_single(),
+	}
+}
+
+// -----------------------------------------------------------------------------
+
+// Ok returns true if there is no error in the NodeSet.
+func (p NodeSet) Ok() bool {
+	return p.Err == nil
+}
+
+/*
+// XGo_Attr returns the value of the specified attribute from the first node in the
+// NodeSet. It only retrieves the attribute from the first node.
+//   - $name
+//   - $“attr-name”
+func (p NodeSet) XGo_Attr__0(name string) any {
+	val, _ := p.XGo_Attr__1(name)
+	return val
+}
+
+// XGo_Attr returns the value of the specified attribute from the first node in the
+// NodeSet. It only retrieves the attribute from the first node.
+//   - $name
+//   - $“attr-name”
+func (p NodeSet) XGo_Attr__1(name string) (val any, err error) {
+	val, err = p.NodeSet.XGo_Attr__1(name)
+	if err == nil {
+		switch v := val.(type) {
+		case *ast.Ident:
+			if v != nil {
+				return v.Name, nil
+			}
+			return "", nil
+		case *ast.BasicLit:
+			if v != nil {
+				return v.Value, nil
+			}
+			return "", nil
+		}
+	}
+	return
+}
+*/
+
+// Class returns the class name of the first node in the NodeSet.
+func (p NodeSet) Class() string {
+	return p.NodeSet.XGo_class()
 }
 
 // -----------------------------------------------------------------------------
