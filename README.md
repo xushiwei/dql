@@ -5,4 +5,7 @@ DQL (DOM Query Language)
 [![GoDoc](https://pkg.go.dev/badge/github.com/goplus/dql.svg)](https://pkg.go.dev/github.com/goplus/xgo/dql)
 [![Language](https://img.shields.io/badge/language-XGo-blue.svg)](https://github.com/goplus/xgo)
 
-It is now part of the [XGo](https://github.com/goplus/xgo) standard library. Only the test code and test data remain here.
+DQL has become part of the [XGo](https://github.com/goplus/xgo) standard library. Most of its content has been migrated to the XGo repository. Only the following are retained here:
+
+* DQL test cases and test data
+* TypeScript syntax support

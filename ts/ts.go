@@ -38,10 +38,10 @@ const (
 
 // -----------------------------------------------------------------------------
 
-// Node represents a XGo AST node.
+// Node represents a TypeScript AST node.
 type Node = reflects.Node
 
-// NodeSet represents a set of XGo AST nodes.
+// NodeSet represents a set of TypeScript AST nodes.
 type NodeSet struct {
 	reflects.NodeSet
 }
@@ -74,14 +74,14 @@ func New(f *ast.SourceFile) NodeSet {
 	}
 }
 
-// Config represents the configuration for parsing XGo source code.
+// Config represents the configuration for parsing TypeScript source code.
 type Config struct {
 	ExternalModuleIndicatorOptions ast.ExternalModuleIndicatorOptions
 	ScriptKind                     core.ScriptKind
 	IgnoreCase                     bool
 }
 
-// parse parses XGo source code from the given filename or source.
+// parse parses TypeScript source code from the given filename or source.
 func parse(filename string, src any, conf ...Config) (f *ast.SourceFile, err error) {
 	b, err := iox.ReadSourceLocal(filename, src)
 	if err != nil {
@@ -104,7 +104,7 @@ func parse(filename string, src any, conf ...Config) (f *ast.SourceFile, err err
 	return parser.ParseSourceFile(opts, sourceText, c.ScriptKind), nil
 }
 
-// From parses Go source code from the given filename or source, returning a NodeSet.
+// From parses TypeScript source code from the given filename or source, returning a NodeSet.
 // An optional Config can be provided to customize the parsing behavior.
 func From(filename string, src any, conf ...Config) NodeSet {
 	f, err := parse(filename, src, conf...)
@@ -114,14 +114,14 @@ func From(filename string, src any, conf ...Config) NodeSet {
 	return New(f)
 }
 
-// Source creates a NodeSet from various types of Go sources.
+// Source creates a NodeSet from various types of TypeScript sources.
 // It supports the following source types:
-// - string: treats the string as a file path, opens the file, and reads Go source code from it.
-// - []byte: treated as Go source code.
-// - *bytes.Buffer: treated as Go source code.
-// - io.Reader: treated as Go source code.
-// - *ast.File: creates a NodeSet from the provided *ast.File.
-// - reflect.Value: creates a NodeSet from the provided reflect.Value (expected to be *ast.File).
+// - string: treats the string as a file path, opens the file, and reads TypeScript source code from it.
+// - []byte: treated as TypeScript source code.
+// - *bytes.Buffer: treated as TypeScript source code.
+// - io.Reader: treated as TypeScript source code.
+// - *ast.SourceFile: creates a NodeSet from the provided *ast.SourceFile.
+// - reflect.Value: creates a NodeSet from the provided reflect.Value (expected to be *ast.SourceFile).
 // - Node: creates a NodeSet containing the single provided node.
 // - iter.Seq[Node]: returns the provided sequence as a NodeSet.
 // - NodeSet: returns the provided NodeSet as is.
